@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##########################################################################
-# (c) 2014 Henrik Ziegenhain <cerdanyohann@yahoo.fr>
+# (c) 2014 Henrik Ziegenhain <henrik@ziegenhain.me>
 # All rights reserved
 #
 # This program is free software : you can redistribute it and/or modify
@@ -22,25 +22,27 @@
 # Autor: Clemens Siebenhaar / 7ITec GmbH / www.7itec.de
 ##########################################################################
 
+clear
+
 # Setzen der Instanz-Variablen aus Übergabe
 if [ "$1" = "" ]; then
-   echo "Fehler beim Aufruf des Skriptes! Keinen Namen für die neue Instanz angegeben! Bitte im ersten Argument das Quellverzeichnis relativ vom aktuellen working directory angeben!
+   echo "Fehler beim Aufruf des Skriptes! Keinen Namen fuer die neue Instanz angegeben! Bitte im ersten Argument das Quellverzeichnis relativ vom aktuellen working directory angeben!"
 
 else
 
 # Variablen setzen
-BACKUP_DIR=${PWD}"/"$1
+BACKUP_DIR=$1
 BACKUP_DEST=${PWD}"/backups"
-TIMESTAMP = `date +"%Y%m%d-%H%M"`
+TIMESTAMP=`date +"%Y%m%d-%H%M"`
 
 # Konfigurationsdatei finden: localconf.php oder LocalConfiguration.php
 
 CONFIG_FILE=
 
 # TYPO3-Version < 6.0
-if [ -f $BACKUP_DIR/typo3conf/localconf.php ]; then
+if [ -f ${PWD}/$BACKUP_DIR/typo3conf/localconf.php ]; then
         echo 'TYPO3-Version < 6.0 : localconf.php wird ausgelesen..'
-        CONFIG_FILE=$BACKUP_DIR/typo3conf/localconf.php
+        CONFIG_FILE=${PWD}/$BACKUP_DIR/typo3conf/localconf.php
         DB_NAME=`cat $CONFIG_FILE | grep '\$typo_db\ ' | cut -d "'" -f 2`
 		DB_USER=`cat $CONFIG_FILE | grep '\$typo_db_username\ ' | cut -d "'" -f 2`
 		DB_PASSWORD=`cat $CONFIG_FILE | grep '\$typo_db_password\ ' | cut -d "'" -f 2`
@@ -48,9 +50,9 @@ if [ -f $BACKUP_DIR/typo3conf/localconf.php ]; then
 fi
 
 # TYPO3-Version >= 6.0
-if [ -f $BACKUP_DIR/typo3conf/LocalConfiguration.php ]; then
+if [ -f ${PWD}/$BACKUP_DIR/typo3conf/LocalConfiguration.php ]; then
         echo 'TYPO3-Version >= 6.0 : LocalConfiguration.php wird ausgelesen..'
-        CONFIG_FILE=$BACKUP_DIR/typo3conf/LocalConfiguration.php
+        CONFIG_FILE=${PWD}/$BACKUP_DIR/typo3conf/LocalConfiguration.php
 		DB_NAME=`cat $CONFIG_FILE | grep \'database\'\ =\> | cut -d "'" -f 4`
 		DB_USER=`cat $CONFIG_FILE | grep \'username\'\ =\> | cut -d "'" -f 4`
 		DB_PASSWORD=`cat $CONFIG_FILE | grep \'password\'\ =\> | cut -d "'" -f 4`
@@ -61,16 +63,50 @@ if [ -z $CONFIG_FILE ]; then
         echo "TYPO3-Konfiguration nicht gefunden"
 fi
 
-echo "Backup $BACKUP_DIR"
+echo "Backup ${PWD}/$BACKUP_DIR"
 echo "Database: $DB_NAME"
 
-echo "Erstelle Sicherungsverzeichnis"
-mkdir -p  $BACKUP_DEST/$DB_NAME
+echo "Erstelle Sicherungsverzeichnis $BACKUP_DEST/$TIMESTAMP"
+mkdir -p  $BACKUP_DEST/$TIMESTAMP
 
 echo "Erstelle Sicherung der Datenbank..."
-mysqldump -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME > $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
+mysqldump --add-drop-table --create-options --default-character-set=utf8 -K -e -n -q --set-charset -u $DB_USER -p$DB_PASSWORD -r $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql $DB_NAME -h $DB_HOST
 
 echo "Sichere Dateien..."
-tar czf $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz -C $BACKUP_DIR .
+tar czf $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz -C ${PWD}/$BACKUP_DIR .
+
+#
+# Optional: Backup Installation
+#
+echo -n "Should I install your recently made Backup? (yes/no)"
+read MAKE_BACKUP
+echo ""
+
+if [ $MAKE_BACKUP != "yes" ]
+then
+	exit
+fi
+
+#Extract Backupfiles
+echo "Entpacke Dateien in Sicherungsverzeichnis..."
+mkdir $BACKUP_DEST/$TIMESTAMP/$BACKUP_DIR
+tar -xzf $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz -C $BACKUP_DEST/$TIMESTAMP/$BACKUP_DIR
+touch $BACKUP_DEST/$TIMESTAMP/$BACKUP_DIR/typo3conf/ENABLE_INSTALL_TOOL
+
+#Read mysql login credentials
+echo -n "Type new mysql db user: "
+read -s NEW_DB_USER
+echo ""
+
+echo -n "Type new mysql db name: "
+read -s NEW_DB_NAME
+echo ""
+
+echo -n "Type new mysql db password: "
+read -s NEW_DB_PASSWORD
+echo ""
+
+echo "Importing DB: $NEW_DB_NAME from $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql"
+mysql -u $NEW_DB_USER -p$NEW_DB_PASSWORD -h $DB_HOST $NEW_DB_NAME < $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
 
 fi
