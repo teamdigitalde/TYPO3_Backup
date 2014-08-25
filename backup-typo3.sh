@@ -24,13 +24,14 @@
 
 # Setzen der Instanz-Variablen aus Übergabe
 if [ "$1" = "" ]; then
-   echo "Fehler beim Aufruf des Skriptes! Keinen Namen für die neue Instanz angegeben!"
+   echo "Fehler beim Aufruf des Skriptes! Keinen Namen für die neue Instanz angegeben! Bitte im ersten Argument das Quellverzeichnis relativ vom aktuellen working directory angeben!
 
 else
 
 # Variablen setzen
-BACKUP_DIR=$1
-BACKUP_DEST=/var/backups
+BACKUP_DIR=${PWD}"/"$1
+BACKUP_DEST=${PWD}"/backups"
+TIMESTAMP = `date +"%Y%m%d-%H%M"`
 
 # Konfigurationsdatei finden: localconf.php oder LocalConfiguration.php
 
@@ -67,9 +68,9 @@ echo "Erstelle Sicherungsverzeichnis"
 mkdir -p  $BACKUP_DEST/$DB_NAME
 
 echo "Erstelle Sicherung der Datenbank..."
-mysqldump -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME > $BACKUP_DEST/$DB_NAME/database_`date +"%Y%m%d-%H%M"`.sql
+mysqldump -u $DB_USER -p$DB_PASSWORD -h $DB_HOST $DB_NAME > $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
 
 echo "Sichere Dateien..."
-tar czf $BACKUP_DEST/$DB_NAME/files_`date +"%Y%m%d-%H%M"`.tar.gz -C $BACKUP_DIR .
+tar czf $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz -C $BACKUP_DIR .
 
 fi
