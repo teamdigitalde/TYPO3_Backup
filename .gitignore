@@ -1,0 +1,4 @@
+# Ignore some project related stuff
+.project
+_notes
+dwsync.xml
