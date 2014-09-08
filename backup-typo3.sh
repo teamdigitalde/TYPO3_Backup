@@ -95,11 +95,11 @@ touch $BACKUP_DEST/$TIMESTAMP/$BACKUP_DIR/typo3conf/ENABLE_INSTALL_TOOL
 
 #Read mysql login credentials
 echo -n "Type new mysql db user: "
-read -s NEW_DB_USER
+read NEW_DB_USER
 echo ""
 
 echo -n "Type new mysql db name: "
-read -s NEW_DB_NAME
+read NEW_DB_NAME
 echo ""
 
 echo -n "Type new mysql db password: "
