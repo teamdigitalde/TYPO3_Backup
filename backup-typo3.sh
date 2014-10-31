@@ -109,4 +109,8 @@ echo ""
 echo "Importing DB: $NEW_DB_NAME from $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql"
 mysql -u $NEW_DB_USER -p$NEW_DB_PASSWORD -h $DB_HOST $NEW_DB_NAME < $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
 
+#Delete backup-tarball and sqldump to cleanup directory
+rm -f $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
+rm -f $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz
+
 fi
