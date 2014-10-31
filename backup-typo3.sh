@@ -78,7 +78,7 @@ tar czf $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz -C ${PWD}/$BACKUP_DIR .
 #
 # Optional: Backup Installation
 #
-echo -n "Should I install your recently made Backup? (yes/no)"
+echo -n "Should I install your recently made Backup? (yes/no) "
 read MAKE_BACKUP
 echo ""
 
@@ -86,7 +86,7 @@ if [ $MAKE_BACKUP != "yes" ]
 then
 	# create .htaccess file with basic acess protection
 	touch $BACKUP_DEST/$TIMESTAMP/.htaccess
-	printf '# Basic security checks\n# - Restrict access to sql dumps and tar-ball\nRewriteRule ^fileadmin/templates/.*(\.sql|\.tar\.gz)$ - [F]' >> $BACKUP_DEST/$TIMESTAMP/.htaccess
+	printf '# Basic security checks\n# - Restrict access to sql dumps and tar-ball\nRewriteRule ^.*(\.sql|\.tar\.gz)$ - [F]' >> $BACKUP_DEST/$TIMESTAMP/.htaccess
 	# exit script
 	exit
 fi
@@ -116,5 +116,8 @@ mysql -u $NEW_DB_USER -p$NEW_DB_PASSWORD -h $DB_HOST $NEW_DB_NAME < $BACKUP_DEST
 #Delete backup-tarball and sqldump to cleanup directory
 rm -f $BACKUP_DEST/$TIMESTAMP/database_$DB_NAME.sql
 rm -f $BACKUP_DEST/$TIMESTAMP/files_$DB_NAME.tar.gz
+echo "Successfully deleted sql dump and backup-tarball"
+echo " "
+echo "Done. REMEMBER TO CHANGE DB-SETTINGS IN INSTALLTOOL!"
 
 fi
