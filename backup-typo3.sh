@@ -84,6 +84,10 @@ echo ""
 
 if [ $MAKE_BACKUP != "yes" ]
 then
+	# create .htaccess file with basic acess protection
+	touch $BACKUP_DEST/$TIMESTAMP/.htaccess
+	printf '# Basic security checks\n# - Restrict access to sql dumps and tar-ball\nRewriteRule ^fileadmin/templates/.*(\.sql|\.tar\.gz)$ - [F]' >> $BACKUP_DEST/$TIMESTAMP/.htaccess
+	# exit script
 	exit
 fi
 
